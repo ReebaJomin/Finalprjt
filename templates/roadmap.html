@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SignLingo Roadmap</title>
+    <link rel="stylesheet" href="../static/styles.css">
+    <style>
+        .progress-container {
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .progress-bar {
+            width: 100%;
+            background-color: #e0e0e0;
+            border-radius: 25px;
+            overflow: hidden;
+            height: 25px;
+        }
+
+        .progress {
+            height: 100%;
+            width: 0%;
+            background-color: #4caf50;
+            text-align: center;
+            color: white;
+            line-height: 25px;
+            border-radius: 25px 0 0 25px;
+            transition: width 0.5s ease-in-out;
+        }
+
+        .progress-percentage {
+            margin-top: 5px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <section id="roadmap">
+        <div class="container">
+            <header>
+                <div class="profile-logo">
+                    <img src="default-profile.png" id="profile-img" alt="Profile Icon" width="50" height="50">
+                    <span id="user-name"></span>
+                </div>
+            </header>
+
+            <h1>Learning Roadmap</h1>
+
+            <!-- Progress Tracker -->
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div class="progress" id="progress"></div>
+                </div>
+                <div class="progress-percentage" id="progress-percentage">0% Completed</div>
+            </div>
+
+            <div class="roadmap">
+                <div class="level" id="level1" onclick="startQuiz('level1')">
+                    Level 1: Basics
+                </div>
+                <div class="level locked" id="level2" onclick="alert('Complete Level 1 first!')">
+                    Level 2: Intermediate
+                    <div class="lock-icon">🔒</div>
+                </div>
+                <div class="level locked" id="level3" onclick="alert('Complete Level 2 first!')">
+                    Level 3: Advanced
+                    <div class="lock-icon">🔒</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Retrieve user data from localStorage
+            let name = localStorage.getItem('userName');
+            let gender = localStorage.getItem('userGender');
+            let completedLevels = JSON.parse(localStorage.getItem('completedLevels')) || [];
+
+            if (name && gender) {
+                // Display the roadmap section
+                document.getElementById('roadmap').classList.remove('hidden');
+
+                // Update profile image and name
+                document.getElementById('user-name').textContent = name;
+
+                let profileImg = document.getElementById('profile-img');
+                profileImg.src = gender === 'male' ? '../static/male-profile.png' : '../static/female-profile.png';
+            } else {
+                // Redirect if no user data is available
+                alert('Please enter your details first.');
+                window.location.href = 'web.html';
+            }
+
+            updateProgressBar(completedLevels);
+        });
+
+        function startQuiz(level) {
+            // Simulate completing a level (in a real app, this would depend on quiz completion)
+            let completedLevels = JSON.parse(localStorage.getItem('completedLevels')) || [];
+            if (!completedLevels.includes(level)) {
+                completedLevels.push(level);
+                localStorage.setItem('completedLevels', JSON.stringify(completedLevels));
+            }
+            updateProgressBar(completedLevels);
+
+            // Redirect to the quiz page
+            window.location.href = 'temp.html?level=' + level;
+        }
+
+        function updateProgressBar(completedLevels) {
+            // Calculate progress percentage
+            const totalLevels = 3;
+            const completedCount = completedLevels.length;
+            const progressPercentage = (completedCount / totalLevels) * 100;
+
+            // Update progress bar and text
+            document.getElementById('progress').style.width = progressPercentage + '%';
+            document.getElementById('progress-percentage').textContent = `${Math.round(progressPercentage)}% Completed`;
+
+            // Unlock levels based on progress
+            if (completedLevels.includes('level1')) {
+                document.getElementById('level2').classList.remove('locked');
+            }
+            if (completedLevels.includes('level2')) {
+                document.getElementById('level3').classList.remove('locked');
+            }
+        }
+    </script>
+</body>
+</html>

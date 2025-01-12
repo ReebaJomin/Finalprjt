@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SignLingo - Learn Indian Sign Language</title>
+    <link rel="stylesheet" href="../static/styles.css">
+</head>
+<body>
+    <!-- Home Page -->
+    <section id="home">
+        <div class="container">
+            <img src="../static/logo.png" alt="SignLingo Logo" id="logo" onclick="goToInfoPage()">
+            <h1 class="heading">SignLingo</h1>
+            <p class="style"><em>Speak with your hands,Connect with your Heart</em></p>
+        </div>
+    </section>
+
+    <!-- User Information Page -->
+    <section id="user-info" class="hidden">
+        <div class="container">
+            <h1>Welcome to SignLingo!</h1>
+            <form id="user-form">
+                <label  for="name">Enter your Name:</label>
+                <input type="text" id="name" name="name" required>
+
+                <label for="gender">Select your Gender:</label>
+                <select id="gender" name="gender" required>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                </select>
+
+                <button type="button" onclick="submitForm(event)">Start Learning</button>
+            </form>
+        </div>
+    </section>
+
+    <section id="roadmap" class="hidden">
+        <div class="container">
+            <header>
+                <div class="profile-logo">
+                    <img src="default-profile.png" id="profile-img" alt="Profile Icon">
+                </div>
+            </header>
+
+            <h1>Learning Roadmap</h1>
+            <div class="roadmap">
+                <div class="level">
+                    Level 1: Basics
+                </div>
+                <div class="level locked">
+                    Level 2: Intermediate
+                    <div class="lock-icon">🔒</div>
+                </div>
+                <div class="level locked">
+                    Level 3: Advanced
+                    <div class="lock-icon">🔒</div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <script src="../static/script.js"></script>
+    
+</body>
+</html>

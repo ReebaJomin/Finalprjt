@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SignLingo Roadmap</title>
+    <link rel="stylesheet" href="../static/styles.css">
+</head>
+<body>
+    <section id="roadmap">
+        <div class="container">
+            <header>
+                <div class="profile-logo">
+                    
+                </div>
+            </header>
+
+            <h1>Level 1</h1>
+            <div class="roadmap">
+                <div class="level" id="level1" onclick="startSign()">
+                    Translation
+                </div>
+                <div class="level locked" id="level2" onclick="startRecommend()">
+                    Recommendation
+                    <div class="lock-icon">🔒</div>
+                </div>
+                <div class="level locked" id="level3" onclick="startQuiz()">
+                    Game
+                    <div class="lock-icon">🔒</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+
+        function startSign() {
+            // Redirect to the quiz page with the level parameter
+            window.location.href = 'sign.html';
+        }
+
+        function startRecommend() {
+            // Redirect to the quiz page with the level parameter
+            window.location.href = 'index.html';
+        }
+
+        function startQuiz(level) {
+            // Redirect to the quiz page with the level parameter
+            window.location.href = 'game.html';
+        }
+
+        // Function to check user's progress and unlock levels
+        function checkUserProgress() {
+            let completedLevels = ['level1']; // Example progress
+
+            if (completedLevels.includes('level1')) {
+                document.getElementById('level2').classList.remove('locked');
+            }
+            if (completedLevels.includes('level2')) {
+                document.getElementById('level3').classList.remove('locked');
+            }
+        }
+
+        // Check progress when the page loads
+        document.addEventListener('DOMContentLoaded', checkUserProgress);
+    </script>
+</body>
+</html>
