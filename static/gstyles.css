@@ -8,6 +8,16 @@ body {
     margin: 0;
   }
   
+h1{
+  margin: 10px 0;
+    font-weight: bold;
+    color: #f7c565 ;
+    text-shadow: 1px 1px 0 #9a8109,   
+    -1px 1px 0 #9a8109, 
+    1px -1px 0 #9a8109,  
+    -1px -1px 0 #9a8109; /* Dark yellow */
+    font-size: 1.5vw;
+}
   #game-board {
     display: grid;
     grid-template-columns: repeat(4, 100px);

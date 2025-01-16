@@ -1,11 +1,11 @@
 const images = [
-    '../assets/hello.jpg', '../assets/hello1.jpg',
-    '../assets/goodbye.jpg', '../assets/goodbye1.jpg',
-    '../assets/please.jpg', '../assets/please1.jpg',
-    '../assets/yes.jpg', '../assets/yes1.jpg',
-    '../assets/no.jpg', '../assets/no1.jpg',
-    '../assets/Thanks.jpg', '../assets/Thanks1.jpg',
-  ];
+  '/static/assets/hello.jpg', '/static/assets/hello1.jpg',
+  '/static/assets/goodbye.jpg', '/static/assets/goodbye1.jpg',
+  '/static/assets/please.jpg', '/static/assets/please1.jpg',
+  '/static/assets/yes.jpg', '/static/assets/yes1.jpg',
+  '/static/assets/no.jpg', '/static/assets/no1.jpg',
+  '/static/assets/Thanks.jpg', '/static/assets/Thanks1.jpg',
+];
   
   let attempts = 0;
   let firstCard = null;

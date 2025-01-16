@@ -1,0 +1,143 @@
+let currentQuestionIndex = 0;
+let correctAnswers = 0;
+let incorrectQuestions = [];
+let answeredQuestions = [];
+let totalQuestions = 0;
+let initialTotalQuestions = 0; // New variable to store the original total number of questions
+
+let wordData = [
+    { word: 'A' },
+    { word: 'B' },
+    { word: 'C' },
+    { word: 'D' },
+    { word: 'E' },
+    { word: 'F' },
+    { word: 'G' },
+    { word: 'H' },
+    { word: 'J' },
+    { word: 'K' },
+    { word: 'L' },
+    { word: 'M' },
+    { word: 'N' },
+    { word: 'O' },
+    { word: 'P' },
+    { word: 'Q' },
+    { word: 'R' },
+    { word: 'S' },
+    { word: 'T' },
+    { word: 'U' },
+    { word: 'V' },
+    { word: 'W' },
+    { word: 'X' },
+    { word: 'Y' },
+    { word: 'Z' },
+    { word: 'I' }
+];
+
+// Shuffle function for randomizing questions
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+}
+
+// Update progress bar after each correct answer
+function updateProgressBar(forceComplete = false) {
+    const progressBar = document.getElementById('quiz-progress');
+    const progressText = document.getElementById('progress-text');
+
+    // Calculate progress percentage
+    const progressPercentage = forceComplete
+        ? 100
+        : (correctAnswers / initialTotalQuestions) * 100;
+
+    progressBar.value = progressPercentage;
+    progressText.textContent = `${Math.round(progressPercentage)}% completed`;
+}
+
+// Load question and display image
+function loadQuestion() {
+    const feedback = document.getElementById('feedback');
+
+    // If all questions, including incorrect ones, are done
+
+    if (currentQuestionIndex >= wordData.length && incorrectQuestions.length === 0) {
+        feedback.textContent = 'Quiz completed!';
+        updateProgressBar(true); // Ensure progress bar reaches 100%
+
+        // Redirect to temp.html after 2 seconds
+        setTimeout(() => {
+            window.location.href = 'temp.html';
+        }, 2000);
+        return;
+    }
+
+    // If revisiting incorrect questions
+    if (currentQuestionIndex >= wordData.length) {
+        wordData = [...incorrectQuestions];
+        incorrectQuestions = [];
+        totalQuestions = wordData.length; // Update total questions
+        currentQuestionIndex = 0;
+        shuffleArray(wordData);
+        feedback.textContent = 'Reattempting incorrect answers.';
+    }
+
+    const question = wordData[currentQuestionIndex];
+    const imageElement = document.getElementById('quiz-image');
+    const optionsContainer = document.getElementById('options-container');
+
+    // Set image source
+    imageElement.src = `/static/assets/${question.word}.jpg`;
+    imageElement.alt = `Image of the letter ${question.word}`;
+
+    // Clear previous options and feedback
+    optionsContainer.innerHTML = '';
+    feedback.textContent = ''; // Clear previous feedback
+
+    // Generate randomized options
+    const options = generateOptions(question.word);
+    options.forEach((option, index) => {
+        const button = document.createElement('button');
+        button.classList.add('option');
+        button.textContent = option;
+        button.onclick = () => checkAnswer(index, question.word, options);
+        optionsContainer.appendChild(button);
+    });
+}
+
+function generateOptions(correctWord) {
+    const options = new Set([correctWord]);
+    while (options.size < 4) {
+        const randomWord = wordData[Math.floor(Math.random() * wordData.length)].word;
+        options.add(randomWord);
+    }
+    return Array.from(options).sort(() => Math.random() - 0.5); // Shuffle options
+}
+
+// Check answer and provide feedback
+function checkAnswer(selectedIndex, correctWord, options) {
+    const feedback = document.getElementById('feedback');
+
+    // If answer is correct
+    if (options[selectedIndex] === correctWord) {
+        correctAnswers++;
+        feedback.textContent = 'Correct!';
+        updateProgressBar();
+    } else {
+        feedback.textContent = `Incorrect! Correct answer: ${correctWord}`;
+        incorrectQuestions.push(wordData[currentQuestionIndex]); // Add to incorrect list
+    }
+
+    // Proceed to next question
+    currentQuestionIndex++;
+    setTimeout(loadQuestion, 2000); // Wait 2 seconds before loading next question
+}
+
+// Initialize quiz and start
+document.addEventListener('DOMContentLoaded', () => {
+    initialTotalQuestions = wordData.length; // Store original total number of questions
+    totalQuestions = wordData.length;  // Set total questions count
+    shuffleArray(wordData);  // Shuffle the questions
+    loadQuestion();  // Load the first question
+});

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SignLingo Quiz</title>
+    <link rel="stylesheet" href="../static/quiz1.css">
+</head>
+<body>
+    <section id="quiz">
+        <div class="container">
+            <h1 id="quiz-title">Quiz: ISL Letters</h1>
+            <div id="video-container">
+                <iframe id="quiz-video" width="600" height="400" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            </div>
+            
+            <div id="progress-container">
+                <progress id="quiz-progress" value="0" max="100"></progress>
+                <span id="progress-text">0% completed</span>
+            </div>            
+            <div id="options-container"></div>
+            <div id="feedback"></div>                  
+        </div>
+    </section>
+    <script src="../static/quiz1.js"></script>
+</body>
+</html>
