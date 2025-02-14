@@ -17,32 +17,23 @@
 
             <h1>Level 1: Basics</h1>
             <div class="roadmap">
-                <div class="level" id="level1" onclick="startlearn()">
+                <div class="level" id="level1" onclick="startAlpha()">
                     Learn
                 </div>
-                <div class="level" id="level1" onclick="startAlpha()">
-                    Numbers
-                </div>
                 <div class="level locked" id="level2" onclick="startRecommend()">
-                    Alphabets
+                    Attend Quizz
                     <div class="lock-icon">🔒</div>
                 </div>
-                <div class="level locked" id="level3" onclick="startQuiz()">
-                    Game
-                    <div class="lock-icon">🔒</div>
                 </div>
             </div>
         </div>
     </section>
 
     <script>
-        function startlearn() {
-            // Redirect to the quiz page with the level parameter
-            window.location.href = 'index2.html';
-        }
+
         function startAlpha() {
             // Redirect to the quiz page with the level parameter
-            window.location.href = 'number.html';
+            window.location.href = 'index.html';
         }
 
         function startRecommend() {

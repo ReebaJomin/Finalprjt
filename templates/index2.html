@@ -6,7 +6,7 @@
     
     <div class="search-container">
         <form id="searchForm">
-            <input type="text" id="wordInput" placeholder="Enter a word..." required>
+            <input type="text" id="wordInput" placeholder="Enter an alphabet or number..." required>
             <button type="submit">Search</button>
         </form>
     </div>
@@ -73,7 +73,7 @@ document.getElementById('searchForm').addEventListener('submit', async (e) => {
     const errorDiv = document.getElementById('error');
     
     try {
-        const response = await fetch('/search', {
+        const response = await fetch('/learn', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',

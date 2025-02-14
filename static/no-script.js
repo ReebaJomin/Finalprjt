@@ -120,8 +120,8 @@ function checkAnswer(selectedIndex, correctWord, options) {
 
 // Initialize quiz and start
 document.addEventListener('DOMContentLoaded', () => {
-    initialTotalQuestions = wordData.length; // Store original total number of questions
-    totalQuestions = wordData.length;  // Set total questions count
-    shuffleArray(wordData);  // Shuffle the questions
-    loadQuestion();  // Load the first question
+    initialTotalQuestions = wordData.length; 
+    totalQuestions = wordData.length;  
+    shuffleArray(wordData); 
+    loadQuestion();  
 });
