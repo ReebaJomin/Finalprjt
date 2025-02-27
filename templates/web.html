@@ -21,17 +21,19 @@
         <div class="container">
             <h1>Welcome to SignLingo!</h1>
             <form id="user-form">
-                <label  for="name">Enter your Name:</label>
+                <label for="name">Enter your Name:</label>
                 <input type="text" id="name" name="name" required>
-
+            
                 <label for="gender">Select your Gender:</label>
                 <select id="gender" name="gender" required>
                     <option value="male">Male</option>
                     <option value="female">Female</option>
                 </select>
-
-                <button type="button" onclick="submitForm(event)">Start Learning</button>
-            </form>
+            
+                <!-- Call loginUser() and signupUser() properly -->
+                <button type="button" onclick="loginUser()">Login</button>
+                <button type="button" onclick="signupUser()">SignUp</button>
+            </form>                       
         </div>
     </section>
 

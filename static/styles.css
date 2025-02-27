@@ -16,7 +16,14 @@ body {
 }
 .profile-logo {
     display: flex;
-    align-items: center;
+    align-items: center; /* Align items in the same row */
+    gap: 10px; /* Add spacing between image and name */
+}
+
+#profile-img {
+    border-radius: 50%; /* Make it circular if needed */
+    width: 80px;
+    height: 80px;
 }
 
 .profile-logo img {
@@ -175,7 +182,8 @@ h1 {
     margin: 10px 0;
     width: 60%;
     text-align: center;
-    font-size: 2vw;
+    border-radius: 10px;
+    font-size: 18px;
     border-radius: 10px;
     color: white;
     position: relative; /* Needed for positioning the lock icon */

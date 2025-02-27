@@ -1,12 +1,101 @@
 
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, session, jsonify
 from recommender import SignLingoRandomForestRecommender
 from recommender2 import SignLingoRandomForestRecommender
 import pandas as pd
+import sqlite3
 import os
-
+from flask_session import Session
+from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
+
+# Database configuration
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///users.db"
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+app.config["SESSION_TYPE"] = "filesystem"
+app.config["SECRET_KEY"] = "supersecretkey"  # Change this for security
+Session(app)
+
+db = SQLAlchemy(app)
+
+# User Model
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(50), unique=True, nullable=False)
+    gender = db.Column(db.String(50), nullable=False)
+    progress_level = db.Column(db.Integer, default=1)
+
+# Create database tables (Run once)
+with app.app_context():
+    db.create_all()
+
+# User Login
+@app.route("/login", methods=["POST"])
+def login():
+    data = request.json
+    username = data.get("username")
+    gender = data.get("gender")
+
+    user = User.query.filter_by(username=username, gender=gender).first()
+    if user:
+        session["user_id"] = user.id
+        return jsonify({"message": "Login successful", "user_id": user.id})
+    return jsonify({"message": "Invalid credentials"}), 401
+
+# Logout
+@app.route("/logout", methods=["POST"])
+def logout():
+    session.pop("user_id", None)
+    return jsonify({"message": "Logged out successfully"})
+
+# Get current user
+@app.route("/get_current_user", methods=["GET"])
+def get_current_user():
+    if "user_id" in session:
+        user = User.query.get(session["user_id"])
+        if user:
+            return jsonify({"user_id": user.id, "progress_level": user.progress_level})
+    return jsonify({"message": "Not logged in"}), 401
+
+# Update user progress
+@app.route("/update_progress", methods=["POST"])
+def update_progress():
+    if "user_id" not in session:
+        return jsonify({"message": "Unauthorized"}), 401
+    
+    data = request.json
+    user = User.query.get(session["user_id"])
+
+    if user and data["progress_level"] > user.progress_level:
+        user.progress_level = data["progress_level"]
+        db.session.commit()
+        return jsonify({"message": "Progress updated!"})
+    
+    return jsonify({"message": "No progress update needed"}), 400
+
+# Get user progress
+@app.route("/progress", methods=["GET"])
+def get_progress():
+    if "user_id" in session:
+        user = User.query.get(session["user_id"])
+        if user:
+            return jsonify({"progress_level": user.progress_level})
+    return jsonify({"message": "Unauthorized"}), 401
+
+@app.route("/signup", methods=["POST"])
+def signup():
+    data = request.json
+    username = data.get("username")
+    gender = data.get("gender")
+
+    if User.query.filter_by(username=username).first():
+        return jsonify({"message": "Username already taken"}), 400
+
+    new_user = User(username=username, gender=gender)
+    db.session.add(new_user)
+    db.session.commit()
+    return jsonify({"message": "Signup successful!"})
 
 df = pd.read_csv(r"C:\Users\DELL\OneDrive\Desktop\Final_prjt\Final_dataset.csv")
 # Initialize sample data and recommender
@@ -15,6 +104,33 @@ data=pd.read_csv("learning.csv")
 #data=pd.read_csv("alphabet.csv")
 recommender = SignLingoRandomForestRecommender(sample_data)
 recommender2 = SignLingoRandomForestRecommender(data)
+
+@app.route('/')
+def web():
+    return render_template('web.html')
+# Function to connect to the database
+def get_db_connection():
+    conn = sqlite3.connect("database.db")
+    conn.row_factory = sqlite3.Row
+    return conn
+
+@app.route('/register', methods=['POST'])
+def register():
+    data = request.get_json()
+    name = data.get("name")
+    gender = data.get("gender")
+
+    if not name or not gender:
+        return jsonify({"error": "Missing name or gender"}), 400
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO users (name, gender) VALUES (?, ?)", (name, gender))
+    conn.commit()
+    conn.close()
+
+    return jsonify({"message": "User registered successfully!"}), 201
+
 
 def convert_to_isl_structure(paragraph):
     # Split the paragraph into sentences
@@ -68,10 +184,6 @@ def preprocess_text(text):
     words = word_tokenize(text)
     lemmatized_words = [lemma.lemmatize(word) for word in words]
     return " ".join(lemmatized_words)
-
-@app.route('/')
-def web():
-    return render_template('web.html')
 
 @app.route('/roadmap.html')
 def roadmap():

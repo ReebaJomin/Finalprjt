@@ -40,6 +40,18 @@ function updateProgressBar(forceComplete = false) {
     progressText.textContent = `${Math.round(progressPercentage)}% completed`;
 }
 
+function checkQuizCompletion() {
+    let passingScore = 90; // Example: 80% required to pass
+    let progressPercentage = (correctAnswers / initialTotalQuestions) * 100;
+
+    if (progressPercentage >= passingScore) {
+        alert("Congratulations! You have the quiz.");
+        window.location.href = "temp.html"; // Redirect back to roadmap
+    } else {
+        alert("Try again! You need at least 90% to pass.");
+        window.location.href = "number.html";
+    }
+}
 // Load question and display image
 function loadQuestion() {
     const feedback = document.getElementById('feedback');
@@ -48,6 +60,7 @@ function loadQuestion() {
 
     if (currentQuestionIndex >= wordData.length && incorrectQuestions.length === 0) {
         feedback.textContent = 'Quiz completed!';
+        checkQuizCompletion();
         updateProgressBar(true); // Ensure progress bar reaches 100%
 
         // Redirect to temp.html after 2 seconds
@@ -58,14 +71,6 @@ function loadQuestion() {
     }
 
     // If revisiting incorrect questions
-    if (currentQuestionIndex >= wordData.length) {
-        wordData = [...incorrectQuestions];
-        incorrectQuestions = [];
-        totalQuestions = wordData.length; // Update total questions
-        currentQuestionIndex = 0;
-        shuffleArray(wordData);
-        feedback.textContent = 'Reattempting incorrect answers.';
-    }
 
     const question = wordData[currentQuestionIndex];
     const imageElement = document.getElementById('quiz-image');
@@ -110,7 +115,7 @@ function checkAnswer(selectedIndex, correctWord, options) {
         updateProgressBar();
     } else {
         feedback.textContent = `Incorrect! Correct answer: ${correctWord}`;
-        incorrectQuestions.push(wordData[currentQuestionIndex]); // Add to incorrect list
+         // Add to incorrect list
     }
 
     // Proceed to next question

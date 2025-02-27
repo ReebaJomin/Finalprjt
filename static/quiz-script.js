@@ -34,7 +34,6 @@ let wordData = [
     { word: 'I' }
 ];
 
-// Shuffle function for randomizing questions
 function shuffleArray(array) {
     for (let i = array.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -56,6 +55,18 @@ function updateProgressBar(forceComplete = false) {
     progressText.textContent = `${Math.round(progressPercentage)}% completed`;
 }
 
+function checkQuizCompletion() {
+    let passingScore = 90; // Example: 80% required to pass
+    let progressPercentage = (correctAnswers / initialTotalQuestions) * 100;
+
+    if (progressPercentage >= passingScore) {
+        alert("Congratulations! You have the quiz.");
+        window.location.href = "temp.html"; // Redirect back to roadmap
+    } else {
+        alert("Try again! You need at least 90% to pass.");
+        window.location.href = "number.html";
+    }
+}
 // Load question and display image
 function loadQuestion() {
     const feedback = document.getElementById('feedback');
@@ -64,6 +75,7 @@ function loadQuestion() {
 
     if (currentQuestionIndex >= wordData.length && incorrectQuestions.length === 0) {
         feedback.textContent = 'Quiz completed!';
+        checkQuizCompletion();
         updateProgressBar(true); // Ensure progress bar reaches 100%
 
         // Redirect to temp.html after 2 seconds
@@ -74,14 +86,6 @@ function loadQuestion() {
     }
 
     // If revisiting incorrect questions
-    if (currentQuestionIndex >= wordData.length) {
-        wordData = [...incorrectQuestions];
-        incorrectQuestions = [];
-        totalQuestions = wordData.length; // Update total questions
-        currentQuestionIndex = 0;
-        shuffleArray(wordData);
-        feedback.textContent = 'Reattempting incorrect answers.';
-    }
 
     const question = wordData[currentQuestionIndex];
     const imageElement = document.getElementById('quiz-image');
@@ -126,7 +130,7 @@ function checkAnswer(selectedIndex, correctWord, options) {
         updateProgressBar();
     } else {
         feedback.textContent = `Incorrect! Correct answer: ${correctWord}`;
-        incorrectQuestions.push(wordData[currentQuestionIndex]); // Add to incorrect list
+         // Add to incorrect list
     }
 
     // Proceed to next question
@@ -134,6 +138,39 @@ function checkAnswer(selectedIndex, correctWord, options) {
     setTimeout(loadQuestion, 2000); // Wait 2 seconds before loading next question
 }
 
+function completeLevel(level) {
+    fetch("/get_current_user")
+        .then(response => response.json())
+        .then(data => {
+            if (data.user_id) {
+                let newProgress = level + 1;
+                fetch("/update_progress", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ progress_level: newProgress })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message) {
+                        if (level === 1) {
+                            localStorage.setItem("level1Completed", "true");
+                        } else if (level === 2) {
+                            localStorage.setItem("level2Completed", "true");
+                        }
+                        alert("Level Completed! Next Level Unlocked.");
+                        window.location.href = "roadmap.html"; // Refresh roadmap
+                    }
+                });
+            } else {
+                alert("Please log in first.");
+            }
+        });
+}
+
+// Call this when the user finishes the quiz
+document.getElementById("finish-quiz-btn").addEventListener("click", function() {
+    completeLevel(1); // Change the number based on the current level
+});
 // Initialize quiz and start
 document.addEventListener('DOMContentLoaded', () => {
     initialTotalQuestions = wordData.length; // Store original total number of questions

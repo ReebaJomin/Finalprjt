@@ -1,42 +1,64 @@
-// Function to go to the user info page
 function goToInfoPage() {
-    document.getElementById('home').classList.add('hidden');
-    document.getElementById('user-info').classList.remove('hidden');
+    document.getElementById("home").classList.add("hidden");
+    document.getElementById("user-info").classList.remove("hidden");
 }
 
-// Function to go to the learning roadmap
-function submitForm(event) {
-    event.preventDefault();
-    
-    // Get values from form
-    let name = document.getElementById('name').value;
-    let gender = document.getElementById('gender').value;
+// Function to handle login
+function loginUser() {
+    let username = document.getElementById("name").value;
+    let gender = document.getElementById("gender").value;
 
-    if (name && gender) {
-        // Save data to localStorage
-        localStorage.setItem('userName', name);
-        localStorage.setItem('userGender', gender);
-
-        // Redirect to roadmap page
-        window.location.href = 'roadmap.html';
-    } else {
-        alert('Please enter all details');
+    if (!username || !gender) {
+        alert("Please enter all details.");
+        return;
     }
+
+    fetch("/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, gender })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.user_id) {
+            console.log("Login Successful. User ID:", data.user_id);
+            localStorage.setItem("user_id", data.user_id);
+            localStorage.setItem("username", username);
+            localStorage.setItem("userGender", gender);
+            window.location.href = "roadmap.html"; // Redirect after setting storage
+ // Redirect to roadmap page
+        } else {
+            alert("Sign Up first.");
+        }
+    })
+    .catch(error => console.error("Error logging in:", error));
 }
 
+// Function to handle signup
+function signupUser() {
+    let username = document.getElementById("name").value;
+    let gender = document.getElementById("gender").value;
 
-// Dummy user progress
-let userProgress = 1; // Example: user has completed Level 1
+    if (!username || !gender) {
+        alert("Please enter all details.");
+        return;
+    }
 
-// Function to update levels based on progress
-function updateLevels() {
-    if (userProgress >= 1) {
-        document.getElementById('level2').classList.remove('locked');
-    }
-    if (userProgress >= 2) {
-        document.getElementById('level3').classList.remove('locked');
-    }
+    fetch("/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, gender })
+    })
+    .then(response => response.json())
+    .then(data => {
+        alert(data.message);
+        if (data.message === "Signup successful!") {
+            localStorage.setItem("user_id", data.user_id);
+            localStorage.setItem("username", username);
+            localStorage.setItem("userGender", gender);
+            window.location.href = "roadmap.html"; // Redirect after setting storage
+
+        }
+    })
+    .catch(error => console.error("Error signing up:", error));
 }
-
-// Call updateLevels on page load
-document.addEventListener('DOMContentLoaded', updateLevels);

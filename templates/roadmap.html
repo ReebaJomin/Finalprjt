@@ -12,114 +12,123 @@
             <header>
                 <div class="profile-logo">
                     <img src="default-profile.png" id="profile-img" alt="Profile Icon" width="50" height="50">
-                    <span id="user-name"></span> <!-- Display user's name -->
+                    <span id="user-name"></span> <!-- Username should be next to the image -->
                 </div>
-            </header>
+            </header>            
 
             <h1>Learning Roadmap</h1>
             <div class="roadmap">
-                <div class="level" id="level1" onclick="startLearn('level1')">
-                    Level 1: Basics
+                <div class="level" id="level-1" onclick="startLearn('level1')">Level 1: Basics</div>
+                <div class="level locked" id="level-2" onclick="startQuiz('level2')">
+                    Level 2: Intermediate <span class="lock-icon">🔒</span>
                 </div>
-                <div class="level locked" id="level2" onclick="startQuiz('level2')">
-                    Level 2: Intermediate
-                    <div class="lock-icon">🔒</div>
+                <div class="level locked" id="level-3" onclick="startQz('level3')">
+                    Level 3: Advanced <span class="lock-icon">🔒</span>
                 </div>
-                <div class="level locked" id="level3" onclick="startQz('level3')">
-                    Level 3: Advanced
-                    <div class="lock-icon">🔒</div>
-                </div>
-                <div class="level" id="translation" onclick="translation()">
-                    Translation
-                </div>
+            </div>
+            <div class="level" id="translation" onclick="translation()">
+                Translation
             </div>
         </div>
     </section>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            // Retrieve user data from localStorage
-            let name = localStorage.getItem('userName');
-            let gender = localStorage.getItem('userGender');
+    document.addEventListener("DOMContentLoaded", function () {
+    let name = localStorage.getItem("username");  // Correct key
+    let gender = localStorage.getItem("userGender");
 
-            if (name && gender) {
-                // Display the roadmap section
-                document.getElementById('roadmap').classList.remove('hidden');
+    if (name && gender) {
+        let userNameElement = document.getElementById("user-name");
+        if (userNameElement) {
+            userNameElement.textContent = name; // Update username
+        }
 
-                // Update profile image and name
-                document.getElementById('user-name').textContent = name;
+        let profileImg = document.getElementById("profile-img");
+        profileImg.src = gender === "male" ? "../static/male-profile.png" : "../static/female-profile.png";
+    } else {
+        alert("Please enter your details first.");
+        window.location.href = "web.html";
+    }
+fetch("/get_current_user")
+    .then(response => response.json())
+    .then(data => {
+        if (data.user_id) {
+            let nameElement = document.getElementById("user-name");
+            nameElement.textContent = data.username || localStorage.getItem("username"); // Fallback to local storage
+        } else {
+            alert("Please log in first.");
+            window.location.href = "web.html";
+        }
+    });
+});
 
-                let profileImg = document.getElementById('profile-img');
-                if (gender === 'male') {
-                    profileImg.src = '../static/male-profile.png'; // Add male profile image
-                } else {
-                    profileImg.src = '../static/female-profile.png'; // Add female profile image
-                }
-            } else {
-                // If no user data, redirect back to homepage
-                alert('Please enter your details first.');
-                window.location.href = 'web.html';
-            }
-        });
+function unlockLevels() {
+
+    let level1Completed = localStorage.getItem("level1Completed") === "true";
+    let level2Completed = localStorage.getItem("level2Completed") === "true";
+
+    let level1 = document.getElementById("level-1");
+    let level2 = document.getElementById("level-2");
+    let level3 = document.getElementById("level-3");
+
+    if (level1) {
+        level1.classList.remove("locked");
+        removeLockIcon(level1);
+        console.log("Level 1 Unlocked");
+    }
+
+    if (level2) {
+        if (level1Completed) {
+            level2.classList.remove("locked");
+            removeLockIcon(level2);
+            console.log("Level 2 Unlocked");
+        } else {
+            level2.classList.add("locked");
+            addLockIcon(level2);
+            console.log("Level 2 Locked Again");
+        }
+    }
+
+    if (level3) {
+        if (level2Completed) {
+            level3.classList.remove("locked");
+            removeLockIcon(level3);
+            console.log("Level 3 Unlocked");
+        } else {
+            level3.classList.add("locked");
+            addLockIcon(level3);
+            console.log("Level 3 Locked Again");
+        }
+    }
+}
+
+document.addEventListener("DOMContentLoaded", unlockLevels);
 
         function startLearn(level) {
-            // Unlock the next level and save progress in localStorage
-            if (level === 'level1') {
-                localStorage.setItem('level1Completed', 'true');
-                //alert('Level 1 completed! Level 2 unlocked.');
-            }
-            window.location.href = 'temp.html?level=' + level;
+            window.location.href = `temp.html?level=${level}`;
         }
 
         function startQuiz(level) {
-            // Ensure the level is not locked before starting
-            if (!document.getElementById(level).classList.contains('locked')) {
-                if (level === 'level2') {
-                    localStorage.setItem('level2Completed', 'true');
-                    alert('Level 1 completed! Level 2 unlocked.');
-                }
-                window.location.href = 'temp2.html?level=' + level;
+            if (localStorage.getItem("level1Completed") === "true") {
+                console.log("Access granted to Intermediate Level.");
+                window.location.href = `temp2.html?level=${level}`;
             } else {
-                alert('Complete the previous level to unlock this!');
+                alert("You must complete Level 1 before accessing Level 2!");
             }
         }
+
         function startQz(level) {
-            // Ensure the level is not locked before starting
-            if (!document.getElementById(level).classList.contains('locked')) {
-                if (level === 'level3') {
-                    localStorage.setItem('level3Completed', 'true');
-                    alert('Level 2 completed! Level 3 unlocked.');
-                }
-                window.location.href = 'roadmap.html?level=' + level;
+            if (localStorage.getItem("level2Completed") === "true") {
+                console.log("Access granted to Intermediate Level.");
+                window.location.href = `temp2.html?level=${level}`;
             } else {
-                alert('Complete the previous level to unlock this!');
+                alert("You must complete Level 2 before accessing Level 3!");
             }
         }
 
         function translation() {
-                window.location.href = 'sign.html';
-    
+            window.location.href = 'sign.html';
         }
-
-        // Function to check user's progress and unlock levels
-        function checkUserProgress() {
-            console.log('Checking user progress...');
-            if (localStorage.getItem('level1Completed') === 'true') {
-                document.getElementById('level2').classList.remove('locked');
-                document.getElementById('level2').querySelector('.lock-icon').style.display = 'none';
-            }
-            if (localStorage.getItem('level2Completed') === 'true') {
-                document.getElementById('level3').classList.remove('locked');
-                document.getElementById('level3').querySelector('.lock-icon').style.display = 'none';
-            }
-            if (localStorage.getItem('level3Completed') === 'true') {
-                document.getElementById('translation').classList.remove('locked');
-                document.getElementById('translation').querySelector('.lock-icon').style.display = 'none';
-            }
-        }
-
-        // Check progress when the page loads
-        document.addEventListener('DOMContentLoaded', checkUserProgress);
     </script>
 </body>
 </html>
