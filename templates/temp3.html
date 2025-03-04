@@ -17,46 +17,33 @@
 
             <h1>Level 1: Basics</h1>
             <div class="roadmap">
-                <div class="level" id="level1" onclick="startlearn()">
+                <div class="level" id="level1" onclick="startAlpha()">
                     Learn
                 </div>
-                <div class="level" id="level1" onclick="startAlpha()">
-                    Numbers
-                </div>
                 <div class="level locked" id="level2" onclick="startRecommend()">
-                    Alphabets
+                    Attend Quizz
                     <div class="lock-icon">🔒</div>
                 </div>
-                <div class="level" id="level3" onclick="startQuiz()">
-                    Game
-                    
                 </div>
             </div>
-            <button id="roadmap-btn" onclick="goToRoadmap()">Go to Roadmap</button>
         </div>
     </section>
 
     <script>
-        function startlearn() {
-            // Redirect to the quiz page with the level parameter
-            window.location.href = 'index2.html';
-        }
+
         function startAlpha() {
             // Redirect to the quiz page with the level parameter
-            window.location.href = 'number.html';
+            window.location.href = 'index3.html';
         }
 
         function startRecommend() {
             // Redirect to the quiz page with the level parameter
-            window.location.href = 'quiz1.html';
+            window.location.href = 'quiz3.html';
         }
 
         function startQuiz(level) {
             // Redirect to the quiz page with the level parameter
             window.location.href = 'game.html';
-        }
-        function goToRoadmap() {
-            window.location.href = 'roadmap.html';
         }
 
         // Function to check user's progress and unlock levels

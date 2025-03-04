@@ -142,6 +142,43 @@
 
         // Check progress when the page loads
         document.addEventListener('DOMContentLoaded', checkUserProgress);
+
+//
+document.addEventListener("DOMContentLoaded", function () {
+    let name = localStorage.getItem('username');
+    let date = localStorage.getItem('date');
+    let progressLevel = localStorage.getItem('progress_level');
+    let score1 = localStorage.getItem('noquiz') || 0;
+    let score2 = localStorage.getItem('alphaquiz') || 0;
+
+    fetch("/get_current_user")
+        .then(response => response.json())
+        .then(data => {
+            if (data.user_id) {
+                console.log("API Response:", data);
+                let storedUser = localStorage.getItem('user_id');
+                if (storedUser && storedUser !== data.user_id) {
+                    localStorage.clear();  // Reset all stored data
+                }
+
+                localStorage.setItem('user_id', data.user_id);
+                document.getElementById("username").textContent = name;
+                document.getElementById("lastActive").textContent = date;
+                document.getElementById("progressLevel").textContent = progressLevel;
+                document.getElementById("quizScore").textContent = score1 + "%";
+                document.getElementById("memoryGameScore").textContent = score2 + "%";
+
+                // Update progress bar based on quiz progress
+                document.getElementById("progress-fill").style.width = score2 + "%";
+                document.getElementById("progress-text").textContent = `Progress: ${score2}%`;
+            } else {
+                alert("Please log in first.");
+                window.location.href = "web.html";
+            }
+        })
+        .catch(error => console.error("Error fetching user data:", error));
+});
+
     </script>
 </body>
 </html>

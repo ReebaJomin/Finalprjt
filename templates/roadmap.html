@@ -18,6 +18,9 @@
 
             <h1>Learning Roadmap</h1>
             <div class="roadmap">
+                <div class="level" id="translation" onclick="dash()">
+                    Dashboard
+                </div>
                 <div class="level" id="level-1" onclick="startLearn('level1')">Level 1: Basics</div>
                 <div class="level locked" id="level-2" onclick="startQuiz('level2')">
                     Level 2: Intermediate <span class="lock-icon">🔒</span>
@@ -34,21 +37,11 @@
 
     <script>
     document.addEventListener("DOMContentLoaded", function () {
-    let name = localStorage.getItem("username");  // Correct key
-    let gender = localStorage.getItem("userGender");
-
-    if (name && gender) {
-        let userNameElement = document.getElementById("user-name");
-        if (userNameElement) {
-            userNameElement.textContent = name; // Update username
-        }
-
+        let name = localStorage.getItem('username');
+        let gender = localStorage.getItem("gender");
         let profileImg = document.getElementById("profile-img");
         profileImg.src = gender === "male" ? "../static/male-profile.png" : "../static/female-profile.png";
-    } else {
-        alert("Please enter your details first.");
-        window.location.href = "web.html";
-    }
+    
 fetch("/get_current_user")
     .then(response => response.json())
     .then(data => {
@@ -62,8 +55,8 @@ fetch("/get_current_user")
     });
 });
 
-function unlockLevels() {
 
+function unlockLevels() {
     let level1Completed = localStorage.getItem("level1Completed") === "true";
     let level2Completed = localStorage.getItem("level2Completed") === "true";
 
@@ -71,56 +64,79 @@ function unlockLevels() {
     let level2 = document.getElementById("level-2");
     let level3 = document.getElementById("level-3");
 
+
     if (level1) {
         level1.classList.remove("locked");
         removeLockIcon(level1);
         console.log("Level 1 Unlocked");
     }
 
+    // Force Level 2 to be locked by default
     if (level2) {
+        level2.classList.add("locked");  // 🔒 Lock Level 2 at the start
+        addLockIcon(level2);
+        console.log("Level 2 Locked");
         if (level1Completed) {
             level2.classList.remove("locked");
             removeLockIcon(level2);
             console.log("Level 2 Unlocked");
-        } else {
-            level2.classList.add("locked");
-            addLockIcon(level2);
-            console.log("Level 2 Locked Again");
         }
     }
 
     if (level3) {
+        level3.classList.add("locked"); // 🔒 Lock Level 3 at the start
+        addLockIcon(level3);
+        console.log("Level 3 Locked");
+
         if (level2Completed) {
             level3.classList.remove("locked");
             removeLockIcon(level3);
             console.log("Level 3 Unlocked");
-        } else {
-            level3.classList.add("locked");
-            addLockIcon(level3);
-            console.log("Level 3 Locked Again");
         }
+    }
+}
+function addLockIcon(levelElement) {
+    if (!levelElement.querySelector(".lock-icon")) {
+        let lockSpan = document.createElement("span");
+        lockSpan.className = "lock-icon";
+        lockSpan.textContent = "🔒";
+        levelElement.appendChild(lockSpan);
+    }
+}
+
+function removeLockIcon(levelElement) {
+    let lockSpan = levelElement.querySelector(".lock-icon");
+    if (lockSpan) {
+        lockSpan.remove();
     }
 }
 
 document.addEventListener("DOMContentLoaded", unlockLevels);
 
+        function dash() {
+            window.location.href = 'dashboard.html';
+        }
         function startLearn(level) {
             window.location.href = `temp.html?level=${level}`;
         }
 
         function startQuiz(level) {
-            if (localStorage.getItem("level1Completed") === "true") {
+            let level2 = document.getElementById("level-2");
+            if (level2.classList.contains("locked")) {
+                alert("You must complete Level 1 before accessing Level 2!");
+                return;
+            }
+            else if(localStorage.getItem("level1Completed") === "true") {
                 console.log("Access granted to Intermediate Level.");
                 window.location.href = `temp2.html?level=${level}`;
-            } else {
-                alert("You must complete Level 1 before accessing Level 2!");
             }
         }
 
         function startQz(level) {
+            
             if (localStorage.getItem("level2Completed") === "true") {
                 console.log("Access granted to Intermediate Level.");
-                window.location.href = `temp2.html?level=${level}`;
+                window.location.href = `temp3.html?level=${level}`;
             } else {
                 alert("You must complete Level 2 before accessing Level 3!");
             }

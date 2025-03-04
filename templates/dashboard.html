@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Learning Path Dashboard</title>
+    <style>
+        body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 20px;
+    text-align: center;
+}
+
+.dashboard {
+    max-width: 600px;
+    margin: auto;
+    background: white;
+    padding: 20px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+}
+
+h2, h3 {
+    color: #333;
+}
+
+.profile-card, .progress-section, .recommendations, .quiz-progress, .learning-history {
+    background: #fff;
+    padding: 15px;
+    margin-top: 15px;
+    border-radius: 8px;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+}
+
+.progress-bar {
+    width: 100%;
+    height: 20px;
+    background: #ddd;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-top: 10px;
+}
+
+#progress-fill {
+    height: 100%;
+    width: 0%;
+    background: #4caf50;
+    text-align: center;
+    color: white;
+    line-height: 20px;
+    font-weight: bold;
+}
+
+ul {
+    list-style: none;
+    padding: 0;
+}
+
+ul li {
+    background: #eee;
+    padding: 8px;
+    margin: 5px 0;
+    border-radius: 5px;
+}
+
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <!-- User Profile -->
+        <div class="profile-card">
+            <h2>👤 Welcome, <span id="username">User</span></h2>
+            <p>📅 Last Active: <span id="lastActive">Loading...</span></p>
+            <p>🎯 Current Level: <span id="progressLevel">1</span></p>
+        </div>
+
+        <!-- Progress Section -->
+        <div class="progress-section">
+            <h3>📊 Learning Progress</h3>
+            <div class="progress-bar">
+                <div id="progress-fill"></div>
+            </div>
+            <p id="progress-text">Progress: 0%</p>
+        </div>
+
+        <!-- Quiz & Memory Game Progress -->
+        <div class="quiz-progress">
+            <h3>📝 Quiz & Game Progress</h3>
+            <p>Last Quiz Score: <span id="quizScore">N/A</span></p>
+            <p>Memory Game Score: <span id="memoryGameScore">N/A</span></p>
+        </div>
+    </div>
+
+    <script>
+
+function unlockLevels() {
+    let level1Completed = localStorage.getItem("level1Completed") === "true";
+    let level2Completed = localStorage.getItem("level2Completed") === "true";
+
+    let level2 = document.getElementById("level-2");
+    let level3 = document.getElementById("level-3");
+
+    if (level1Completed) {
+        level2.classList.remove("locked");
+        removeLockIcon(level2);
+    }
+
+    if (level2Completed) {
+        level3.classList.remove("locked");
+        removeLockIcon(level3);
+    }
+}
+document.addEventListener("DOMContentLoaded", unlockLevels);
+
+document.addEventListener("DOMContentLoaded", function () {
+    fetch("/get_current_user")
+        .then(response => response.json())
+        .then(data => {
+            if (data.user_id) {
+                console.log("User Data:", data);
+
+                // Ensure stored user ID matches
+                let storedUser = localStorage.getItem('user_id');
+                if (storedUser && storedUser !== data.user_id) {
+                    localStorage.clear();
+                }
+                localStorage.setItem('user_id', data.user_id);
+                document.getElementById("username").textContent = data.username;
+                // Fetch progress from the backend
+                fetch("/progress")
+                    .then(response => response.json())
+                    .then(progress => {
+                        localStorage.setItem("progress_level", progress.progress_level || 1);
+                        localStorage.setItem("level1Completed", progress.progress_level >= 1 ? "true" : "false");
+                        localStorage.setItem("level2Completed", progress.progress_level >= 2 ? "true" : "false");
+                        let quiz_score = (progress.alphaquiz+progress.noquiz)/2;
+                        
+                        document.getElementById("lastActive").textContent = progress.date;
+                        document.getElementById("progressLevel").textContent = progress.progress_level;
+                        let savedQuizScore = localStorage.getItem("noquiz");
+                        if (savedQuizScore) {
+                            document.getElementById("quizScore").textContent = savedQuizScore + "%";
+                        }
+                        //document.getElementById("quizScore").textContent = progress.noquiz + "%";
+                        document.getElementById("memoryGameScore").textContent = progress.alphaquiz + "%";
+                        document.getElementById("progress-fill").style.width = `${quiz_score || 0}%`;
+                        document.getElementById("progress-text").textContent = `Progress: ${quiz_score || 0}%`;
+
+                        unlockLevels(); // Re-check level unlock status
+                        
+                    });
+            } else {
+                alert("Please log in first.");
+                window.location.href = "web.html";
+            }
+        })
+        .catch(error => console.error("Error fetching user data:", error));
+});
+    </script>
+
+</body>
+</html>

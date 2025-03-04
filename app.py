@@ -1,5 +1,7 @@
-
 from flask import Flask, render_template, request, session, jsonify
+from utils.isl_converter import convert_to_isl
+from utils.quiz_generator import generate_quiz, evaluate_quiz
+from utils.user_progress import update_user_progress, get_user_stats
 from recommender import SignLingoRandomForestRecommender
 from recommender2 import SignLingoRandomForestRecommender
 import pandas as pd
@@ -7,16 +9,18 @@ import sqlite3
 import os
 from flask_session import Session
 from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime
+import nltk
+nltk.download('wordnet')
 
 app = Flask(__name__)
-
+app.secret_key = os.urandom(24)  # For session management
 # Database configuration
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///users.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["SESSION_TYPE"] = "filesystem"
 app.config["SECRET_KEY"] = "supersecretkey"  # Change this for security
 Session(app)
-
 db = SQLAlchemy(app)
 
 # User Model
@@ -24,11 +28,16 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(50), unique=True, nullable=False)
     gender = db.Column(db.String(50), nullable=False)
-    progress_level = db.Column(db.Integer, default=1)
+    date = db.Column(db.String(20), nullable=False,default=lambda: datetime.now().strftime("%Y-%m-%d"))
+    progress_level = db.Column(db.Integer, default=1,nullable=False)
+    noquiz=db.Column(db.Integer, default=1,nullable=False)
+    alphaquiz=db.Column(db.Integer, default=1,nullable=False)
 
 # Create database tables (Run once)
 with app.app_context():
-    db.create_all()
+    #db.drop_all()  # Delete all tables
+    db.create_all()  # Recreate tables with the new structure
+    print("Database tables recreated!")
 
 # User Login
 @app.route("/login", methods=["POST"])
@@ -55,33 +64,64 @@ def get_current_user():
     if "user_id" in session:
         user = User.query.get(session["user_id"])
         if user:
-            return jsonify({"user_id": user.id, "progress_level": user.progress_level})
+            return jsonify({"user_id": user.id,"username": user.username, "gender":user.gender,"date":user.date,"progress_level": user.progress_level,"noquiz":user.noquiz,"alphaquiz":user.alphaquiz})
     return jsonify({"message": "Not logged in"}), 401
 
 # Update user progress
-@app.route("/update_progress", methods=["POST"])
+'''@app.route("/update_progress", methods=["POST"])
 def update_progress():
     if "user_id" not in session:
         return jsonify({"message": "Unauthorized"}), 401
     
     data = request.json
     user = User.query.get(session["user_id"])
-
+    user.date=data["date"]
     if user and data["progress_level"] > user.progress_level:
         user.progress_level = data["progress_level"]
         db.session.commit()
         return jsonify({"message": "Progress updated!"})
     
     return jsonify({"message": "No progress update needed"}), 400
+'''
+@app.route('/update_progress', methods=['POST'])
+def update_progress():
+    data = request.json
+    user_id = session.get("user_id")
+    
+    if not user_id:
+        return jsonify({"error": "User not logged in"}), 401
+    
+    user = User.query.filter_by(id=user_id).first()
+    if user:
+        user.date=data["date"]
+        user.progress_level = data.get("progress_level", user.progress_level)
+        user.alphaquiz = data.get("alphaquiz", user.alphaquiz)
+        user.noquiz = data.get("noquiz", user.noquiz)
+        db.session.commit()
+        return jsonify({"message": "Progress updated successfully"})
+    
+    return jsonify({"error": "User not found"}), 404
 
 # Get user progress
-@app.route("/progress", methods=["GET"])
+
+@app.route('/progress', methods=['GET'])
 def get_progress():
-    if "user_id" in session:
-        user = User.query.get(session["user_id"])
-        if user:
-            return jsonify({"progress_level": user.progress_level})
-    return jsonify({"message": "Unauthorized"}), 401
+    user_id = session.get("user_id")
+    
+    if not user_id:
+        return jsonify({"error": "User not logged in"}), 401
+    
+    user = User.query.filter_by(id=user_id).first()
+    
+    if user:
+        return jsonify({
+            "date": user.date,
+            "progress_level": user.progress_level,
+            "noquiz": user.noquiz,
+            "alphaquiz":user.alphaquiz
+        })
+    
+    return jsonify({"error": "User not found"}), 404
 
 @app.route("/signup", methods=["POST"])
 def signup():
@@ -109,7 +149,7 @@ recommender2 = SignLingoRandomForestRecommender(data)
 def web():
     return render_template('web.html')
 # Function to connect to the database
-def get_db_connection():
+'''def get_db_connection():
     conn = sqlite3.connect("database.db")
     conn.row_factory = sqlite3.Row
     return conn
@@ -130,7 +170,7 @@ def register():
     conn.close()
 
     return jsonify({"message": "User registered successfully!"}), 201
-
+'''
 
 def convert_to_isl_structure(paragraph):
     # Split the paragraph into sentences
@@ -174,7 +214,6 @@ def convert_to_isl_structure(paragraph):
     return " ".join(isl_sentences)
 
 def preprocess_text(text):
-    import nltk
     import string
     from nltk.tokenize import word_tokenize
     from nltk.stem.wordnet import WordNetLemmatizer
@@ -185,6 +224,9 @@ def preprocess_text(text):
     lemmatized_words = [lemma.lemmatize(word) for word in words]
     return " ".join(lemmatized_words)
 
+@app.route('/dashboard.html')
+def dashboard():
+    return render_template('dashboard.html')
 @app.route('/roadmap.html')
 def roadmap():
     return render_template('roadmap.html')
@@ -196,6 +238,10 @@ def temp():
 @app.route('/temp2.html')
 def temp2():
     return render_template('temp2.html')
+
+@app.route('/temp3.html')
+def temp3():
+    return render_template('temp3.html')
 
 @app.route('/index.html')
 def index():
@@ -213,9 +259,13 @@ def sign():
 def game():
     return render_template('game.html')
 
-@app.route('/quiz.html')
-def quiz():
-    return render_template('quiz.html')
+@app.route('/quiz1.html')
+def quiz1():
+    return render_template('quiz1.html')
+
+@app.route('/word1.html')
+def word():
+    return render_template('word1.html')
 
 @app.route('/number.html')
 def number():
@@ -271,6 +321,76 @@ def get_videos():
 
     return jsonify(video_urls=video_urls)
 
+@app.route('/index3.html')
+def index3():
+    return render_template('index3.html')
+@app.route('/quiz3.html')
+def quiz3():
+    return render_template('quiz3.html')
+
+@app.route("/convert", methods=["POST"])
+def convert():
+    data = request.get_json()
+    sentence = data.get("sentence", "")
+    isl_sentence = convert_to_isl(sentence)
+    
+    # Get the list of available videos
+    video_words = get_available_videos()
+    
+    # Check which words have corresponding videos
+    words_with_videos = []
+    for word in isl_sentence.split():
+        if word.lower() in [v.lower() for v in video_words]:
+            words_with_videos.append({"word": word, "hasVideo": True})
+        else:
+            words_with_videos.append({"word": word, "hasVideo": False})
+    
+    return jsonify({
+        "isl_sentence": isl_sentence,
+        "words_with_videos": words_with_videos
+    })
+
+@app.route("/quiz")
+def quiz():
+    if 'current_quiz' not in session:
+        session['current_quiz'] = generate_quiz(difficulty='easy')
+
+    print(session['current_quiz'])  # Debugging line
+
+    return render_template("quiz3.html", quiz=session.get('current_quiz', {}))
+
+@app.route("/submit_quiz", methods=["POST"])
+def submit_quiz():
+    data = request.get_json()
+    user_answers = data.get("answers", {})
+    
+    # Evaluate the quiz results
+    results = evaluate_quiz(session['current_quiz'], user_answers)
+    
+    # Update user progress
+    if 'user_id' in session:
+        update_user_progress(session['user_id'], results)
+    
+    # Generate a new quiz for next time
+    session['current_quiz'] = generate_quiz(
+        difficulty=results['next_difficulty'],
+        focus_areas=results['weak_areas']
+    )
+    
+    return jsonify(results)
+
+@app.route("/play_video/<word>")
+def play_video(word):
+    # Return the video path for the requested word
+    video_path = f"/static/assets/videos/{word.lower()}.mp4"
+    return jsonify({"path": video_path})
+
+def get_available_videos():
+    # Get the list of available video files (without extension)
+    video_dir = os.path.join(app.static_folder, "assets", "videos")
+    if os.path.exists(video_dir):
+        return [os.path.splitext(f)[0] for f in os.listdir(video_dir) if f.endswith('.mp4')]
+    return []
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=True)
