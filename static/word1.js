@@ -6,16 +6,63 @@ let totalQuestions = 0;
 let initialTotalQuestions = 0; // New variable to store the original total number of questions
 
 let wordData = [
-    { word: '0' },
-    { word: '1' },
-    { word: '2' },
-    { word: '3' },
-    { word: '4' },
-    { word: '5' },
-    { word: '6' },
-    { word: '7' },
-    { word: '8' },
-    { word: '9' }
+    {word:'After'},
+{ word: 'Cannot'},
+{ word: 'Good'},
+{ word: 'Again'},
+{ word: 'Change'},
+{ word: 'Great'},
+{ word: 'Against'},
+{ word: 'College'},
+{ word: 'Hand'},
+{ word: 'Age'},
+{ word: 'Come'},
+{ word: 'Hands'},
+{ word: 'All'},
+{ word: 'Computer'},
+{ word: 'Happy'},
+{ word: 'Alone'},
+{ word: 'Day'},
+{ word: 'Hello'},
+{ word: 'Also'},
+{ word: 'Distance'},
+{ word: 'Help'},
+{ word: 'And'},
+{ word: 'Do Not'},
+{ word: 'Her'},
+{ word: 'Ask'},
+{ word: 'Do'},
+{ word: 'Here'},
+{ word: 'At'},
+{ word: 'Does Not'},
+{ word: 'His'},
+{ word: 'Be'},
+{ word: 'Eat'},
+{ word: 'Home'},
+{ word: 'Beautiful'},
+{ word: 'Engineer'},
+{ word: 'Homepage'},
+{ word: 'Before'},
+{ word: 'Fight'},
+{ word: 'How'},
+{ word: 'Best'},
+{ word: 'Finish'},
+{ word: 'Invent'},
+{ word: 'Better'},
+{ word: 'From'},
+{ word: 'It'},
+{ word: 'Busy'},
+{ word: 'Glitter'},
+{ word: 'But' },
+    { word: 'Go' },
+    { word: 'Keep' },
+    { word: 'Language' },
+    { word: 'Bye' },
+    { word: 'God' },
+    { word: 'Laugh'},
+    { word: 'Can'},
+    { word: 'Gold'},
+    { word: 'Learn'}
 ];
 
 // Shuffle function for randomizing questions
@@ -48,7 +95,7 @@ function checkQuizCompletion() {
     }
     localStorage.setItem("noquiz", progressPercentage);
     if (progressPercentage >= passingScore) {
-        fetch("/get_current_user")
+        /*fetch("/get_current_user")
         .then(response => response.json())
         .then(data => {
             if (data.user_id) {
@@ -64,44 +111,40 @@ function checkQuizCompletion() {
                     }
                 });   
             }
-        });
+        });*/
         alert("Congratulations! You have completed the quiz.");
         window.location.href = "temp.html"; // Redirect back to roadmap
     } else {
         alert("Try again! You need 100% to pass.");
-        window.location.href = "number.html";
+        window.location.href = "word1.html";
     }
 }
 // Load question and display image
 function loadQuestion() {
     const feedback = document.getElementById('feedback');
+    const videoElement = document.getElementById('quiz-video');
+    const optionsContainer = document.getElementById('options-container');
 
-    // If all questions, including incorrect ones, are done
-
-    if (currentQuestionIndex >= wordData.length && incorrectQuestions.length === 0) {
+    if (currentQuestionIndex >= wordData.length) {
         feedback.textContent = 'Quiz completed!';
         checkQuizCompletion();
-        updateProgressBar(true); // Ensure progress bar reaches 100%
-
-        // Redirect to temp.html after 2 seconds
+        updateProgressBar(true);
         setTimeout(() => {
             window.location.href = 'temp.html';
         }, 2000);
         return;
     }
 
-    // If revisiting incorrect questions
-
     const question = wordData[currentQuestionIndex];
-    const imageElement = document.getElementById('quiz-image');
-    const optionsContainer = document.getElementById('options-container');
 
-    // Set image source
-    imageElement.src = `/static/assets/${question.word}.jpg`;
-    imageElement.alt = `Image of the letter ${question.word}`;
+    // Ensure the video source is correctly set
+    videoElement.src = `/static/vid/${question.word}.mp4`;
+    videoElement.load();  // Reload the video
+    videoElement.play();  // Auto-play
+
     // Clear previous options and feedback
     optionsContainer.innerHTML = '';
-    feedback.textContent = ''; // Clear previous feedback
+    feedback.textContent = '';
 
     // Generate randomized options
     const options = generateOptions(question.word);
@@ -114,14 +157,16 @@ function loadQuestion() {
     });
 }
 
+
 function generateOptions(correctWord) {
     const options = new Set([correctWord]);
     while (options.size < 4) {
         const randomWord = wordData[Math.floor(Math.random() * wordData.length)].word;
         options.add(randomWord);
     }
-    return Array.from(options).sort(() => Math.random() - 0.5); // Shuffle options
+    return Array.from(options).sort(() => Math.random() - 0.5);
 }
+
 
 // Check answer and provide feedback
 function checkAnswer(selectedIndex, correctWord, options) {

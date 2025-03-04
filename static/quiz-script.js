@@ -56,15 +56,17 @@ function updateProgressBar(forceComplete = false) {
 }
 
 function checkQuizCompletion() {
-    let passingScore = 90; // Example: 80% required to pass
+    let passingScore = 100; // Example: 80% required to pass
     let progressPercentage = (correctAnswers / initialTotalQuestions) * 100;
-
+    localStorage.setItem("alphaquiz", progressPercentage);
     if (progressPercentage >= passingScore) {
-        alert("Congratulations! You have the quiz.");
+        completeLevel(1);
+        localStorage.setItem("level1Completed", "true");
+        alert("Congratulations! You have completed the quiz.");
         window.location.href = "temp.html"; // Redirect back to roadmap
     } else {
-        alert("Try again! You need at least 90% to pass.");
-        window.location.href = "number.html";
+        alert("Try again! You need 100% to pass.");
+        window.location.href = "quiz.html";
     }
 }
 // Load question and display image
@@ -144,14 +146,18 @@ function completeLevel(level) {
         .then(data => {
             if (data.user_id) {
                 let newProgress = level + 1;
+                let date = new Date().toISOString().split("T")[0];
+                let score1 = (correctAnswers / initialTotalQuestions) * 100;
+
                 fetch("/update_progress", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ progress_level: newProgress })
+                    body: JSON.stringify({ date: date, progress_level: newProgress, alphaquiz: score1 })
                 })
                 .then(response => response.json())
                 .then(data => {
                     if (data.message) {
+                        localStorage.setItem("alphaquiz", score1);
                         if (level === 1) {
                             localStorage.setItem("level1Completed", "true");
                         } else if (level === 2) {
@@ -166,11 +172,9 @@ function completeLevel(level) {
             }
         });
 }
-
-// Call this when the user finishes the quiz
-document.getElementById("finish-quiz-btn").addEventListener("click", function() {
-    completeLevel(1); // Change the number based on the current level
-});
+//document.getElementById("finish-quiz-btn").addEventListener("click", function() {
+     // Change the number based on the current level
+//});
 // Initialize quiz and start
 document.addEventListener('DOMContentLoaded', () => {
     initialTotalQuestions = wordData.length; // Store original total number of questions

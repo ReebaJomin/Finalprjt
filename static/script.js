@@ -9,7 +9,7 @@ function loginUser() {
     let gender = document.getElementById("gender").value;
 
     if (!username || !gender) {
-        alert("Please enter all details.");
+        
         return;
     }
 
@@ -22,6 +22,10 @@ function loginUser() {
     .then(data => {
         if (data.user_id) {
             console.log("Login Successful. User ID:", data.user_id);
+            let storedUser = localStorage.getItem('user_id');
+            if (storedUser && storedUser !== data.user_id) {
+                localStorage.clear();  // Reset all stored data
+            }
             localStorage.setItem("user_id", data.user_id);
             localStorage.setItem("username", username);
             localStorage.setItem("userGender", gender);
@@ -40,7 +44,7 @@ function signupUser() {
     let gender = document.getElementById("gender").value;
 
     if (!username || !gender) {
-        alert("Please enter all details.");
+        
         return;
     }
 
@@ -53,7 +57,11 @@ function signupUser() {
     .then(data => {
         alert(data.message);
         if (data.message === "Signup successful!") {
+            let storedUser = localStorage.getItem('user_id');
             localStorage.setItem("user_id", data.user_id);
+            if (storedUser && storedUser !== data.user_id) {
+                localStorage.clear();  // Reset all stored data
+            }
             localStorage.setItem("username", username);
             localStorage.setItem("userGender", gender);
             window.location.href = "roadmap.html"; // Redirect after setting storage
@@ -62,3 +70,5 @@ function signupUser() {
     })
     .catch(error => console.error("Error signing up:", error));
 }
+document.addEventListener("DOMContentLoaded", loginUser);
+document.addEventListener("DOMContentLoaded", signupUser);
