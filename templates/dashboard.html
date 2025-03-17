@@ -64,7 +64,21 @@ ul li {
     margin: 5px 0;
     border-radius: 5px;
 }
+#roadmap-btn {
+    margin-top: 20px;
+    padding: 10px 20px;
+    font-size: 16px;
+    background-color: #87c345;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 10px;
+    transition: background-color 0.3s;
+}
 
+#roadmap-btn:hover {
+    background-color: #66bb6a;
+}
     </style>
 </head>
 <body>
@@ -92,8 +106,11 @@ ul li {
             <p>Memory Game Score: <span id="memoryGameScore">N/A</span></p>
         </div>
     </div>
-
+    <button id="roadmap-btn" onclick="goToRoadmap()">Go to Roadmap</button>
     <script>
+function goToRoadmap() {
+            window.location.href = 'roadmap.html';
+        }
 
 function unlockLevels() {
     let level1Completed = localStorage.getItem("level1Completed") === "true";

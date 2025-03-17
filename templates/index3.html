@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Learn Indian Sign Language</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style3.css') }}">
+    <link rel="stylesheet" href="../static/style3.css">
 </head>
 <body>
     <div class="container">
@@ -16,7 +16,7 @@
                 <ul>
                     <li><a href="{{ url_for('index3') }}" class="active">Learn</a></li>
                     <li><a href="{{ url_for('quiz3') }}">Quiz</a></li>
-                    
+                    <li><a href="{{ url_for('progress') }}">Progress</a></li>
                 </ul>
             </nav>
         </header>
@@ -103,12 +103,8 @@
         </main>
 
         <div id="messageContainer" class="message-container"></div>
-
-        <footer>
-            <p>&copy; 2025 ISL Learning App</p>
-        </footer>
     </div>
 
-    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script src="../static/main.js"></script>
 </body>
 </html>
