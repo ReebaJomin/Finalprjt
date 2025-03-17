@@ -94,7 +94,7 @@ function loadQuestion() {
     const optionsContainer = document.getElementById('options-container');
 
     // Set image source
-    imageElement.src = `/static/assets/${question.word}.jpg`;
+    imageElement.src = `/static/assets/${question.word}.png`;
     imageElement.alt = `Image of the letter ${question.word}`;
 
     // Clear previous options and feedback
@@ -148,11 +148,12 @@ function completeLevel(level) {
                 let newProgress = level + 1;
                 let date = new Date().toISOString().split("T")[0];
                 let score1 = (correctAnswers / initialTotalQuestions) * 100;
+                update_user_streak(user)
 
                 fetch("/update_progress", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ date: date, progress_level: newProgress, alphaquiz: score1 })
+                    body: JSON.stringify({ date: date, progress_level: newProgress, alphaquiz: score1,"streak": user.current_streak })
                 })
                 .then(response => response.json())
                 .then(data => {

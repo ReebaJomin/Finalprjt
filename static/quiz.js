@@ -58,15 +58,24 @@ function initializeQuizUI() {
             },
             body: JSON.stringify({ answers: answers }),
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                // Log response details for debugging
+                return response.json().then(errorDetails => {
+                    console.error('Server error details:', errorDetails);
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                });
+            }
+            return response.json();
+        })
         .then(results => {
             displayQuizResults(results);
         })
         .catch(error => {
-            console.error('Error:', error);
+            console.error('Error submitting quiz:', error);
             showMessage('Error submitting quiz. Please try again.', 'error');
         });
-    });
+    });        
     
     // Initialize sortable elements for reordering questions
     document.querySelectorAll('.sortable-container').forEach(container => {

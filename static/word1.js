@@ -5,66 +5,26 @@ let answeredQuestions = [];
 let totalQuestions = 0;
 let initialTotalQuestions = 0; // New variable to store the original total number of questions
 
-let wordData = [
-    {word:'After'},
-{ word: 'Cannot'},
-{ word: 'Good'},
-{ word: 'Again'},
-{ word: 'Change'},
-{ word: 'Great'},
-{ word: 'Against'},
-{ word: 'College'},
-{ word: 'Hand'},
-{ word: 'Age'},
-{ word: 'Come'},
-{ word: 'Hands'},
-{ word: 'All'},
-{ word: 'Computer'},
-{ word: 'Happy'},
-{ word: 'Alone'},
-{ word: 'Day'},
-{ word: 'Hello'},
-{ word: 'Also'},
-{ word: 'Distance'},
-{ word: 'Help'},
-{ word: 'And'},
-{ word: 'Do Not'},
-{ word: 'Her'},
-{ word: 'Ask'},
-{ word: 'Do'},
-{ word: 'Here'},
-{ word: 'At'},
-{ word: 'Does Not'},
-{ word: 'His'},
-{ word: 'Be'},
-{ word: 'Eat'},
-{ word: 'Home'},
-{ word: 'Beautiful'},
-{ word: 'Engineer'},
-{ word: 'Homepage'},
-{ word: 'Before'},
-{ word: 'Fight'},
-{ word: 'How'},
-{ word: 'Best'},
-{ word: 'Finish'},
-{ word: 'Invent'},
-{ word: 'Better'},
-{ word: 'From'},
-{ word: 'It'},
-{ word: 'Busy'},
-{ word: 'Glitter'},
-{ word: 'But' },
-    { word: 'Go' },
-    { word: 'Keep' },
-    { word: 'Language' },
-    { word: 'Bye' },
-    { word: 'God' },
-    { word: 'Laugh'},
-    { word: 'Can'},
-    { word: 'Gold'},
-    { word: 'Learn'}
-];
+async function fetchRandomWords() {
+    try {
+        const response = await fetch('/get_video_list'); // Endpoint to get video filenames
+        const videoFiles = await response.json();
+        
+        if (videoFiles.length < 10) {
+            console.error('Not enough video files available.');
+            return;
+        }
 
+        shuffleArray(videoFiles);
+        wordData = videoFiles.slice(0, 10).map(file => ({ word: file.replace('.mp4', '') }));
+        
+        initialTotalQuestions = wordData.length;
+        totalQuestions = wordData.length;
+        loadQuestion();
+    } catch (error) {
+        console.error('Error fetching video list:', error);
+    }
+}
 // Shuffle function for randomizing questions
 function shuffleArray(array) {
     for (let i = array.length - 1; i > 0; i--) {
@@ -93,27 +53,12 @@ function checkQuizCompletion() {
     if (correctAnswers === initialTotalQuestions) {
         progressPercentage = 100;
     }
-    localStorage.setItem("noquiz", progressPercentage);
+    localStorage.setItem("twoquiz", progressPercentage);
     if (progressPercentage >= passingScore) {
-        /*fetch("/get_current_user")
-        .then(response => response.json())
-        .then(data => {
-            if (data.user_id) {
-                fetch("/update_progress", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({noquiz:progressPercentage })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.message) {
-                        localStorage.setItem("noquiz", progressPercentage);
-                    }
-                });   
-            }
-        });*/
+        completeLevel(2);
+        localStorage.setItem("level2Completed", "true");
         alert("Congratulations! You have completed the quiz.");
-        window.location.href = "temp.html"; // Redirect back to roadmap
+        window.location.href = "temp2.html"; // Redirect back to roadmap
     } else {
         alert("Try again! You need 100% to pass.");
         window.location.href = "word1.html";
@@ -138,9 +83,11 @@ function loadQuestion() {
     const question = wordData[currentQuestionIndex];
 
     // Ensure the video source is correctly set
-    videoElement.src = `/static/vid/${question.word}.mp4`;
+    videoElement.src = `/static/videos/${question.word}.mp4`;
     videoElement.load();  // Reload the video
-    videoElement.play();  // Auto-play
+    videoElement.muted = true;
+    videoElement.play();
+  // Auto-play
 
     // Clear previous options and feedback
     optionsContainer.innerHTML = '';
@@ -186,9 +133,42 @@ function checkAnswer(selectedIndex, correctWord, options) {
     currentQuestionIndex++;
     setTimeout(loadQuestion, 2000); // Wait 2 seconds before loading next question
 }
+function completeLevel(level) {
+    fetch("/get_current_user")
+        .then(response => response.json())
+        .then(data => {
+            if (data.user_id) {
+                let newProgress = level + 1;
+                let date = new Date().toISOString().split("T")[0];
+                let score = (correctAnswers / initialTotalQuestions) * 100;
+                update_user_streak(user)
 
+                fetch("/update_progress", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ date: date, progress_level: newProgress, twoquiz: score,"streak": user.current_streak })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message) {
+                        localStorage.setItem("twoquiz", score);
+                        if (level === 1) {
+                            localStorage.setItem("level1Completed", "true");
+                        } else if (level === 2) {
+                            localStorage.setItem("level2Completed", "true");
+                        }
+                        alert("Level Completed! Next Level Unlocked.");
+                        window.location.href = "roadmap.html"; // Refresh roadmap
+                    }
+                });
+            } else {
+                alert("Please log in first.");
+            }
+        });
+}
 // Initialize quiz and start
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    await fetchRandomWords();  // Ensure wordData is initialized first
     initialTotalQuestions = wordData.length; 
     totalQuestions = wordData.length;  
     shuffleArray(wordData); 

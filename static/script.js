@@ -29,7 +29,7 @@ function loginUser() {
             localStorage.setItem("user_id", data.user_id);
             localStorage.setItem("username", username);
             localStorage.setItem("userGender", gender);
-            window.location.href = "roadmap.html"; // Redirect after setting storage
+            window.location.href = "dashboard.html"; // Redirect after setting storage
  // Redirect to roadmap page
         } else {
             alert("Sign Up first.");
@@ -64,7 +64,7 @@ function signupUser() {
             }
             localStorage.setItem("username", username);
             localStorage.setItem("userGender", gender);
-            window.location.href = "roadmap.html"; // Redirect after setting storage
+            window.location.href = "dashboard.html"; // Redirect after setting storage
 
         }
     })

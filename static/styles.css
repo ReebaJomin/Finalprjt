@@ -214,3 +214,23 @@ h1 {
 .locked:hover .lock-icon {
     display: block; /* Show lock icon on hover */
 }
+.button-container {
+    display: flex;
+    gap: 10px; /* Spacing between buttons */
+    margin-top: 20px;
+}
+
+#roadmap-btn, #dashboard-btn {
+    padding: 10px 20px;
+    font-size: 16px;
+    background-color: #87c345;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 10px;
+    transition: background-color 0.3s;
+}
+
+#roadmap-btn:hover, #dashboard-btn:hover {
+    background-color: #66bb6a;
+}

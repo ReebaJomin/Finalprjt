@@ -72,35 +72,67 @@ function initializeApp() {
     
     // Display translation result
     function displayTranslation(data) {
-        // Clear previous results
         islOutput.innerHTML = '';
-        
-        if (!data.isl_sentence) {
-            islOutput.innerHTML = '<p class="error-message">Could not translate sentence. Please try again with a different sentence.</p>';
-            return;
-        }
-        
-        // Create word elements
+    
         const wordsWithVideos = data.words_with_videos || [];
-        
         wordsWithVideos.forEach(wordInfo => {
             const wordElement = document.createElement('span');
             wordElement.textContent = wordInfo.word;
             wordElement.className = 'isl-word';
-            
+    
             if (wordInfo.hasVideo) {
                 wordElement.classList.add('has-video');
                 wordElement.title = 'Click to see video';
-                
-                // Add click event to show video
-                wordElement.addEventListener('click', function() {
-                    playSignVideo(wordInfo.word);
-                });
+            } else {
+                console.warn(`No video for: ${wordInfo.word}`);
             }
-            
+    
             islOutput.appendChild(wordElement);
             islOutput.appendChild(document.createTextNode(' '));
         });
+    
+        islOutput.addEventListener('click', function(event) {
+            if (event.target.classList.contains('has-video')) {
+                const word = event.target.textContent.trim();
+        
+                // Find the corresponding video URL
+                const videoData = wordsWithVideos.find(w => w.word === word);
+                if (videoData && videoData.url) {
+                    playVideo(videoData.url);
+                } else {
+                    console.error(" No video URL found for:", word);
+                }
+            }
+        });
+    
+        
+        function playVideo(videoUrl) {
+            
+            // If it's a YouTube URL, extract the video ID
+            let videoId = null;
+            const youtubeRegex = /(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+            const match = videoUrl.match(youtubeRegex);
+            
+            if (match) {
+                videoId = match[1];
+            }
+            
+            if (videoId) {
+                // Display the YouTube video in an iframe
+                document.getElementById('videoPlaceholder').innerHTML = `
+                    <iframe width="560" height="315" src="https://www.youtube.com/embed/${videoId}?autoplay=1" 
+                            frameborder="0" allowfullscreen>
+                    </iframe>
+                `;
+            } else {
+                console.error(" Invalid YouTube URL:", videoUrl);
+            }
+        }
+        
+// Debugging: Check final HTML
+setTimeout(() => {
+    console.log("Final ISL Output:", islOutput.innerHTML);
+}, 1000);
         
         // Show or scroll to video section
         videoSection.style.display = 'block';
@@ -115,38 +147,48 @@ function initializeApp() {
     
     // Play sign language video for a word
     function playSignVideo(word) {
-        // Show loading state
+    
         videoPlaceholder.style.display = 'flex';
         videoPlaceholder.innerHTML = '<div class="loading-spinner"></div>';
         signVideo.style.display = 'none';
         videoUnavailable.style.display = 'none';
         currentWordElement.textContent = word;
-        
-        // Fetch video URL
+    
         fetch(`/play_video/${encodeURIComponent(word)}`)
             .then(response => response.json())
             .then(data => {
-                if (data.path) {
-                    signVideo.src = data.path;
-                    signVideo.load();
-                    signVideo.onloadeddata = function() {
-                        videoPlaceholder.style.display = 'none';
-                        signVideo.style.display = 'block';
-                        videoUnavailable.style.display = 'none';
-                        signVideo.play();
-                    };
-                    signVideo.onerror = function() {
-                        showVideoUnavailable(word);
-                    };
+    
+                if (data.url) {
+                    playVideo(data.url);
                 } else {
                     showVideoUnavailable(word);
                 }
             })
             .catch(error => {
-                console.error('Error:', error);
+                console.error("Error fetching video:", error);
                 showVideoUnavailable(word);
             });
     }
+    
+    function playVideo(videoLink) {
+        const videoId = getYouTubeId(videoLink);
+    
+        if (videoId) {
+            signVideo.innerHTML = `
+                <iframe 
+                    width="100%" 
+                    height="450" 
+                    src="https://www.youtube.com/embed/${videoId}" 
+                    frameborder="0" 
+                    allowfullscreen>
+                </iframe>`;
+            signVideo.style.display = "block";
+            videoPlaceholder.style.display = "none"; // Hide placeholder when video loads
+        } else {
+            console.error("Invalid YouTube link:", videoLink);
+            showVideoUnavailable();
+        }
+    }        
     
     function showVideoUnavailable(word) {
         videoPlaceholder.style.display = 'flex';
@@ -213,4 +255,25 @@ function showMessage(message, type = 'info') {
             messageContainer.removeChild(messageElement);
         }, 500);
     }, 5000);
+}
+
+function getYouTubeId(url) {
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : null;
+}
+function playVideo(videoLink) {
+    const videoId = getYouTubeId(videoLink);
+    if (videoId) {
+        const embedHtml = `
+            <iframe 
+                width="100%" 
+                height="450" 
+                src="https://www.youtube.com/embed/${videoId}" 
+                frameborder="0" 
+                allowfullscreen>
+            </iframe>`;
+        document.getElementById('signVideo').innerHTML = embedHtml;
+        modal.style.display = "block";
+    }
 }
