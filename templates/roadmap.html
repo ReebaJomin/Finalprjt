@@ -41,16 +41,39 @@
         let name = localStorage.getItem('username');
         let gender = localStorage.getItem("gender");
         let profileImg = document.getElementById("profile-img");
-        profileImg.src = gender === "male" ? "../static/male-profile.png" : "../static/female-profile.png";
+        if (gender === "male") {
+            profileImg.src = "../static/male-profile.png";
+        } else if (gender === "female") {
+            profileImg.src = "../static/female-profile.png";
+        }
     
 fetch("/get_current_user")
     .then(response => response.json())
     .then(data => {
         if (data.user_id) {
             let nameElement = document.getElementById("user-name");
-            nameElement.textContent = data.username || localStorage.getItem("username"); // Fallback to local storage
-        } else {
-            alert("Please log in first.");
+            nameElement.textContent = data.username || localStorage.getItem("username"); // Fallback to local storag
+            if (data.gender) {
+                        localStorage.setItem("gender", data.gender);
+                    }
+
+            // Update profile image again after fetching user data
+            let updatedGender = localStorage.getItem("gender");
+            if (updatedGender === "male") {
+                profileImg.src = "../static/male-profile.png";
+            } else if (updatedGender === "female") {
+                profileImg.src = "../static/female-profile.png";
+            }
+            if (data.level1Completed !== undefined) {
+                localStorage.setItem("level1Completed", data.level1Completed ? "true" : "false");
+            }
+            if (data.level2Completed !== undefined) {
+                localStorage.setItem("level2Completed", data.level2Completed ? "true" : "false");
+            }
+
+            unlockLevels();  // 
+        } 
+        else {
             window.location.href = "web.html";
         }
     });
@@ -81,7 +104,6 @@ function dash()
 function unlockLevels() {
     let level1Completed = localStorage.getItem("level1Completed") === "true";
     let level2Completed = localStorage.getItem("level2Completed") === "true";
-
     let level1 = document.getElementById("level-1");
     let level2 = document.getElementById("level-2");
     let level3 = document.getElementById("level-3");
@@ -95,9 +117,10 @@ function unlockLevels() {
 
     // Force Level 2 to be locked by default
     if (level2) {
-        level2.classList.add("locked");  // 🔒 Lock Level 2 at the start
+        level2.classList.add("locked"); // 🔒 Lock Level 3 at the start
         addLockIcon(level2);
         console.log("Level 2 Locked");
+
         if (level1Completed) {
             level2.classList.remove("locked");
             removeLockIcon(level2);

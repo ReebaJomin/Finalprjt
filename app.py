@@ -14,16 +14,16 @@ from flask_session import Session
 from flask_sqlalchemy import SQLAlchemy
 from datetime import date, timedelta
 from flask import send_from_directory
+from flask_cors import CORS
 import nltk
 import numpy as np
 nltk.download('wordnet')
 nltk.download('punkt')
 
-if os.path.exists("users.db"):
-    os.remove("users.db")
-    print("Old database deleted.")
-app = Flask(__name__, static_folder='static')
+# Your app initialization
+app = Flask(__name__, static_folder='static', template_folder='templates')
 app.secret_key = os.urandom(24)  # For session management
+CORS(app)
 # Database configuration
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///users.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
@@ -42,12 +42,13 @@ class User(db.Model):
     noquiz=db.Column(db.Integer, default=1,nullable=False)
     alphaquiz=db.Column(db.Integer, default=1,nullable=False)
     twoquiz=db.Column(db.Integer, default=1,nullable=False)
+    threequiz=db.Column(db.Integer, default=1,nullable=False)
     date = db.Column(db.Date,default=None)  # Track last activity
+    quiz=db.Column(db.Integer, default=0,nullable=False)
     current_streak = db.Column(db.Integer, default=0)
 
 # Create database tables (Run once)
 with app.app_context():
-    db.drop_all()  # Delete all tables
     db.create_all()  # Recreate tables with the new structure
     print("Database tables recreated!")
 
@@ -58,18 +59,6 @@ data=pd.read_csv("learning.csv")
 #data=pd.read_csv("alphabet.csv")
 recommender = main(sample_data)
 recommender2 = main(data)
-# User Login
-@app.route("/login", methods=["POST"])
-def login():
-    data = request.json
-    username = data.get("username")
-    gender = data.get("gender")
-
-    user = User.query.filter_by(username=username, gender=gender).first()
-    if user:
-        session["user_id"] = user.id
-        return jsonify({"message": "Login successful", "user_id": user.id})
-    return jsonify({"message": "Invalid credentials"}), 401
 
 # Logout
 @app.route("/logout", methods=["POST"])
@@ -90,19 +79,41 @@ def get_current_user():
 @app.route('/update_progress', methods=['POST'])
 def update_progress():
     data = request.json
+    print("Received update data:", data)
     user_id = session.get("user_id")
+    print("User ID from session:", user_id)
     
     if not user_id:
         return jsonify({"error": "User not logged in"}), 401
     
     user = User.query.filter_by(id=user_id).first()
+    print("Found user:", user is not None)
+    
     if user:
-        user.date=data["date"]
+        # Convert string date to Date object if needed
+        if isinstance(data.get("date"), str):
+            try:
+                user.date = datetime.datetime.strptime(data["date"], "%Y-%m-%d").date()
+            except:
+                user.date = datetime.datetime.now().date()
+        else:
+            user.date = data.get("date") or datetime.datetime.now().date()
+            
         user.progress_level = data.get("progress_level", user.progress_level)
         user.alphaquiz = data.get("alphaquiz", user.alphaquiz)
         user.noquiz = data.get("noquiz", user.noquiz)
-        db.session.commit()
-        return jsonify({"message": "Progress updated successfully"})
+        user.twoquiz = data.get("twoquiz", user.twoquiz)
+        user.threequiz = data.get("threequiz", user.threequiz)
+        user.quiz=data.get("quiz",user.quiz)
+        
+        try:
+            db.session.commit()
+            print("Database updated successfully")
+            return jsonify({"message": "Progress updated successfully"})
+        except Exception as e:
+            print("Database error:", str(e))
+            db.session.rollback()
+            return jsonify({"error": f"Database error: {str(e)}"}), 500
     
     return jsonify({"error": "User not found"}), 404
 
@@ -121,8 +132,11 @@ def get_progress():
         return jsonify({
             "date": user.date,
             "progress_level": user.progress_level,
+            "quiz":user.quiz,
             "noquiz": user.noquiz,
             "alphaquiz":user.alphaquiz,
+            "twoquiz":user.twoquiz,
+            "threequiz":user.threequiz,
             "quizzes_taken": user.noquiz,
             "words_learned": user.progress_level * 20,  # Example calculation
             "learning_streak": user.current_streak,  # Replace with real streak logic
@@ -132,47 +146,62 @@ def get_progress():
     
     return jsonify({"error": "User not found"}), 404
 
-@app.route("/signup", methods=["POST"])
-def signup():
-    data = request.json
-    username = data.get("username")
-    gender = data.get("gender")
-
-    if User.query.filter_by(username=username).first():
-        return jsonify({"message": "Username already taken"}), 400
-
-    new_user = User(username=username, gender=gender)
-    db.session.add(new_user)
-    db.session.commit()
-    return jsonify({"message": "Signup successful!"})
-
-
+# Basic routes
 @app.route('/')
 def web():
     return render_template('web.html')
+
+@app.route('/dashboard.html')
+def dashboard():
+    return render_template('dashboard.html')
+
+# User authentication routes
+@app.route("/signup", methods=["POST"])
+def signup():
+    try:
+        data = request.json
+        print("Received signup data:", data)  # Debug print
+        
+        username = data.get("username")
+        gender = data.get("gender")
+
+        if not username or not gender:
+            return jsonify({"message": "Username and gender are required"}), 400
+
+        if User.query.filter_by(username=username).first():
+            return jsonify({"message": "Username already taken"}), 400
+
+        new_user = User(username=username, gender=gender)
+        db.session.add(new_user)
+        db.session.commit()
+        
+        # Get the new user's ID to return
+        user_id = new_user.id
+        
+        return jsonify({"message": "Signup successful!", "user_id": user_id})
+    except Exception as e:
+        print("Signup error:", str(e))
+        db.session.rollback()
+        return jsonify({"message": "Error during signup: " + str(e)}), 500
+
+@app.route("/login", methods=["POST"])
+def login():
+    try:
+        data = request.json
+        username = data.get("username")
+        gender = data.get("gender")
+
+        user = User.query.filter_by(username=username, gender=gender).first()
+        if user:
+            session["user_id"] = user.id
+            return jsonify({"message": "Login successful", "user_id": user.id})
+        return jsonify({"message": "Invalid credentials"}), 401
+    except Exception as e:
+        print("Login error:", str(e))
+        return jsonify({"message": "Error during login: " + str(e)}), 500
+
 # Function to connect to the database
-'''def get_db_connection():
-    conn = sqlite3.connect("database.db")
-    conn.row_factory = sqlite3.Row
-    return conn
 
-@app.route('/register', methods=['POST'])
-def register():
-    data = request.get_json()
-    name = data.get("name")
-    gender = data.get("gender")
-
-    if not name or not gender:
-        return jsonify({"error": "Missing name or gender"}), 400
-
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("INSERT INTO users (name, gender) VALUES (?, ?)", (name, gender))
-    conn.commit()
-    conn.close()
-
-    return jsonify({"message": "User registered successfully!"}), 201
-'''
 
 def convert_to_isl_structure(paragraph):
     # Split the paragraph into sentences
@@ -226,9 +255,10 @@ def preprocess_text(text):
     lemmatized_words = [lemma.lemmatize(word) for word in words]
     return " ".join(lemmatized_words)
 
-@app.route('/dashboard.html')
-def dashboard():
-    return render_template('dashboard.html')
+def serve_static(filename):
+    return send_from_directory('static', filename)
+
+# Update the route for the dashboard
 @app.route('/roadmap.html')
 def roadmap():
     return render_template('roadmap.html')
@@ -532,6 +562,6 @@ def clear_session():
     session.clear()
     return "Session cleared!"
 
-
+# Add this at the end of your file
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000, debug=True)

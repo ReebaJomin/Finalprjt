@@ -4,15 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SignLingo - Learn Indian Sign Language</title>
-    <link rel="stylesheet" href="../static/styles.css">
+    <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
     <!-- Home Page -->
     <section id="home">
         <div class="container">
-            <img src="../static/logo.png" alt="SignLingo Logo" id="logo" onclick="goToInfoPage()">
+            <img src="/static/logo.png" alt="SignLingo Logo" id="logo" onclick="goToInfoPage()">
             <h1 class="heading">SignLingo</h1>
-            <p class="style"><em>Speak with your hands,Connect with your Heart</em></p>
+            <p class="style"><em>Speak with your hands, Connect with your Heart</em></p>
         </div>
     </section>
 
@@ -30,9 +30,10 @@
                     <option value="female">Female</option>
                 </select>
             
-                <!-- Call loginUser() and signupUser() properly -->
-                <button type="button" onclick="loginUser()">Login</button>
-                <button type="button" onclick="signupUser()">SignUp</button>
+                <div class="button-group">
+                    <button type="button" onclick="loginUser()">Login</button>
+                    <button type="button" onclick="signupUser()">SignUp</button>
+                </div>
             </form>                       
         </div>
     </section>
@@ -41,14 +42,12 @@
         <div class="container">
             <header>
                 <div class="profile-logo">
-                    <img src="default-profile.png" id="profile-img" alt="Profile Icon">
+                    <img src="/static/default-profile.png" id="profile-img" alt="Profile Icon">
                 </div>
             </header>
-
-            
         </div>
     </section>
-    <script src="../static/script.js"></script>
     
+    <script src="/static/script.js"></script>
 </body>
 </html>

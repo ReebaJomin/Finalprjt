@@ -144,15 +144,20 @@ def auto_categorize_words(df, word_embeddings):
     print(f"Estimated optimal number of clusters: {optimal_k}")
 
     # Option 2: HDBSCAN for clustering (often better for text embeddings)
-    # Reduce dimensionality first for better clustering
-    umap_reducer = umap.UMAP(n_components=10, random_state=42)
-    umap_embeddings = umap_reducer.fit_transform(embeddings)
+    # Reduce dimensionality first using PCA instead of UMAP
+    pca = PCA(n_components=min(10, embeddings.shape[1]), random_state=42)
+    pca_embeddings = pca.fit_transform(embeddings)
+    
+    # Print explained variance to see how much information is retained
+    explained_variance = pca.explained_variance_ratio_
+    total_variance = explained_variance.sum()
+    print(f"PCA: Total explained variance with {pca_embeddings.shape[1]} components: {total_variance:.4f}")
 
     # Apply HDBSCAN clustering
     hdbscan_clusterer = hdbscan.HDBSCAN(min_cluster_size=max(2, len(words) // 20),
                                         min_samples=1,
                                         prediction_data=True)
-    hdbscan_labels = hdbscan_clusterer.fit_predict(umap_embeddings)
+    hdbscan_labels = hdbscan_clusterer.fit_predict(pca_embeddings)
 
     # Fall back to K-means if HDBSCAN didn't find good clusters
     if len(np.unique(hdbscan_labels)) < 2 or (len(np.unique(hdbscan_labels)) == 2 and -1 in hdbscan_labels):
