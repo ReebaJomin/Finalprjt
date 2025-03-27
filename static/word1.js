@@ -50,14 +50,27 @@ function updateProgressBar(forceComplete = false) {
 function checkQuizCompletion() {
     let passingScore = 100; // Example: 80% required to pass
     let progressPercentage = (correctAnswers / initialTotalQuestions) * 100;
-    if (correctAnswers === initialTotalQuestions) {
-        progressPercentage = 100;
-    }
-    localStorage.setItem("twoquiz", progressPercentage);
+    fetch("/get_current_user")
+        .then(response => response.json())
+        .then(data => {
+            if (data.user_id) {
+                fetch("/update_progress", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({twoquiz:progressPercentage })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message) {
+                        localStorage.setItem("twoquiz", progressPercentage);
+                    }
+                });   
+            }
+        });
     if (progressPercentage >= passingScore) {
+        alert("Congratulations! You have completed Level 2.");
         completeLevel(2);
         localStorage.setItem("level2Completed", "true");
-        alert("Congratulations! You have completed the quiz.");
         window.location.href = "temp2.html"; // Redirect back to roadmap
     } else {
         alert("Try again! You need 100% to pass.");
@@ -134,36 +147,55 @@ function checkAnswer(selectedIndex, correctWord, options) {
     setTimeout(loadQuestion, 2000); // Wait 2 seconds before loading next question
 }
 function completeLevel(level) {
+    // Remove dependency on user object
     fetch("/get_current_user")
         .then(response => response.json())
         .then(data => {
             if (data.user_id) {
                 let newProgress = level + 1;
+                let score=level+1;
                 let date = new Date().toISOString().split("T")[0];
-                let score = (correctAnswers / initialTotalQuestions) * 100;
+                let score1 = (correctAnswers / initialTotalQuestions) * 100;
                 update_user_streak(user)
-
+                
                 fetch("/update_progress", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ date: date, progress_level: newProgress, twoquiz: score,"streak": user.current_streak })
+                    body: JSON.stringify({ 
+                        date: date, 
+                        progress_level: newProgress, 
+                        twoquiz: score1,
+                        quiz:score
+                    })
                 })
-                .then(response => response.json())
+                .then(response => {
+                    console.log("Update response status:", response.status);
+                    return response.json();
+                })
                 .then(data => {
+                    console.log("Update response data:", data);
                     if (data.message) {
-                        localStorage.setItem("twoquiz", score);
-                        if (level === 1) {
-                            localStorage.setItem("level1Completed", "true");
-                        } else if (level === 2) {
-                            localStorage.setItem("level2Completed", "true");
-                        }
+                        localStorage.setItem("twoquiz", score1);
+                        localStorage.setItem("quiz", score);
+                        localStorage.setItem(`level${level}Completed`, "true");
                         alert("Level Completed! Next Level Unlocked.");
-                        window.location.href = "roadmap.html"; // Refresh roadmap
+                        window.location.href = "roadmap.html";
+                    } else {
+                        alert("Error updating progress: " + (data.error || "Unknown error"));
                     }
+                })
+                .catch(error => {
+                    console.error("Error updating progress:", error);
+                    alert("Error updating progress. Check console for details.");
                 });
             } else {
                 alert("Please log in first.");
+                window.location.href = "web.html";
             }
+        })
+        .catch(error => {
+            console.error("Error getting user:", error);
+            alert("Error getting user data. Check console for details.");
         });
 }
 // Initialize quiz and start

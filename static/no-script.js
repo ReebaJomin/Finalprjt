@@ -46,25 +46,30 @@ function checkQuizCompletion() {
     if (correctAnswers === initialTotalQuestions) {
         progressPercentage = 100;
     }
-    localStorage.setItem("noquiz", progressPercentage);
-    if (progressPercentage >= passingScore) {
-        fetch("/get_current_user")
+    fetch("/get_current_user")
         .then(response => response.json())
         .then(data => {
+        if (data.user_id) {
+            let score=level+1;
             if (data.user_id) {
                 fetch("/update_progress", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({noquiz:progressPercentage })
+                    body: JSON.stringify({noquiz:progressPercentage,
+                            quiz:score
+                     })
                 })
                 .then(response => response.json())
                 .then(data => {
                     if (data.message) {
                         localStorage.setItem("noquiz", progressPercentage);
+                        localStorage.setItem("quiz", score);
                     }
                 });   
             }
-        });
+        }
+    });
+    if (progressPercentage >= passingScore) {
         alert("Congratulations! You have completed the quiz.");
         window.location.href = "temp.html"; // Redirect back to roadmap
     } else {

@@ -70,6 +70,7 @@ function initializeQuizUI() {
         })
         .then(results => {
             displayQuizResults(results);
+            updateProgressInDatabase(results);
         })
         .catch(error => {
             console.error('Error submitting quiz:', error);
@@ -111,7 +112,59 @@ function initializeQuizUI() {
         }
     });
 }
+function updateProgressInDatabase(results) {
+    const date = new Date().toISOString().split('T')[0];
+    fetch("/get_current_user")
+        .then(response => response.json())
+        .then(data => {
+            if (data.user_id) {
+                level=2
+                let newProgress = level + 1;
+                let score=3;
+                let date = new Date().toISOString().split("T")[0];
+                let score1 = results.score_percentage;
 
+                // Log values for debugging
+                
+                fetch("/update_progress", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ 
+                    date: date, 
+                    progress_level: results.level, 
+                    threequiz:score1
+                })
+            })
+            .then(response => {
+                console.log("Update response status:", response.status);
+                return response.json();
+            })
+            .then(data => {
+                console.log("Update response data:", data);
+                if (data.message) {
+                    localStorage.setItem("threequiz",score1);
+                    localStorage.setItem("quiz", score);
+                    localStorage.setItem(`level${level}Completed`, "true");
+                    
+                    window.location.href = "roadmap.html";
+                } else {
+                    alert("Error updating progress: " + (data.error || "Unknown error"));
+                }
+            })
+            .catch(error => {
+                console.error("Error updating progress:", error);
+                alert("Error updating progress. Check console for details.");
+            });
+        } else {
+            alert("Please log in first.");
+            window.location.href = "web.html";
+        }
+        })
+        .catch(error => {
+        console.error("Error getting user:", error);
+        alert("Error getting user data. Check console for details.");
+        });
+}
 function displayQuizResults(results) {
     const resultsContainer = document.getElementById('quizResults');
     const questionsContainer = document.getElementById('questionsContainer');
